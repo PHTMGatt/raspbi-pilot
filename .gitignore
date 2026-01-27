@@ -1,0 +1,28 @@
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Env
+.env
+.env.*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+logs/
+*.log
+
+# PM2 (for Pi later)
+.pm2/
+pids/
+
+# Render
+.render/
+
+# Editor
+.vscode/
+.idea/
