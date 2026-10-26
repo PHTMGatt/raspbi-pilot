@@ -1,5 +1,8 @@
-# <img src="./raspbi-pilot.png" width="30" align="center" /> raspbi-pilot
+# raspbi-pilot
 
+<p align="center">
+  <img src="https://raw.githubusercontent.com/PHTMGatt/12-React-Portfolio/a2c43d8301679dbda14ad06dc225d61e5515e431/src/assets/project-images/raspbi.png" width="800" alt="raspbi-pilot portfolio artwork">
+</p>
 
 **raspbi-pilot** is a lightweight Node.js launcher that runs multiple Discord bots
 under **one runtime and one hosting service**.
