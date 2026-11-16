@@ -39,7 +39,7 @@ sudo ./install.sh
 The installer:
 
 1. Creates a locked-down service user `bots` (no login shell) with home `/opt/bots`.
-2. Clones both bots (branch `claude-forge` until it is merged; then run with `BRANCH=main sudo -E ./install.sh`) and runs `npm ci --omit=dev`.
+2. Clones both bots (branch `main`; override with `BRANCH=<name> sudo -E ./install.sh`) and runs `npm ci --omit=dev`.
 3. Creates an `.env` per bot from `env.example`, `chmod 600`, with **empty values**. It never asks for or stores tokens.
 4. Installs and enables the two systemd units (hardened: no new privileges, read-only filesystem except the bot's own `data/` folder). It does not start them.
 

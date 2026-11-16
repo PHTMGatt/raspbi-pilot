@@ -6,13 +6,13 @@
 # Optional environment overrides:
 #   BOTS_USER  service user to create/use     (default: bots)
 #   BOTS_DIR   where the bots are cloned       (default: /opt/bots)
-#   BRANCH     git branch to deploy            (default: claude-forge, switch to main once merged)
+#   BRANCH     git branch to deploy            (default: main)
 #   OWNER      GitHub owner                    (default: PHTMGatt)
 set -euo pipefail
 
 BOTS_USER="${BOTS_USER:-bots}"
 BOTS_DIR="${BOTS_DIR:-/opt/bots}"
-BRANCH="${BRANCH:-claude-forge}"
+BRANCH="${BRANCH:-main}"
 OWNER="${OWNER:-PHTMGatt}"
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
