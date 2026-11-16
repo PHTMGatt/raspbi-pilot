@@ -1,8 +1,8 @@
 # raspbi-pilot
 
-<p align="center">
-  <img src="https://raw.githubusercontent.com/PHTMGatt/12-React-Portfolio/main/src/assets/photos/raspbi.png" width="900" alt="raspbi-pilot project artwork">
-</p>
+[![CI](https://github.com/PHTMGatt/raspbi-pilot/actions/workflows/ci.yml/badge.svg)](https://github.com/PHTMGatt/raspbi-pilot/actions/workflows/ci.yml)
+
+![raspbi-pilot](docs/screenshot.png)
 
 **raspbi-pilot** is the Raspberry Pi steward: the systemd units and one installer that keep Bryen's Discord bots running on an always-on Pi.
 
