@@ -1,0 +1,23 @@
+[Unit]
+Description=Legacy Discord Bot (commit formatter + GitHub push alerts)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+# @BOTS_USER@ and @BOTS_DIR@ are filled in by install.sh
+User=@BOTS_USER@
+WorkingDirectory=@BOTS_DIR@/Discord-Legacy-Bot
+EnvironmentFile=@BOTS_DIR@/Discord-Legacy-Bot/.env
+Environment=NODE_ENV=production
+ExecStart=/usr/bin/node src/index.js
+Restart=always
+RestartSec=5
+# Hardening: the bot only needs its own folder (data/store.json) and outbound network
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=@BOTS_DIR@/Discord-Legacy-Bot/data
+
+[Install]
+WantedBy=multi-user.target
