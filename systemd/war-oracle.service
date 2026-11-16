@@ -1,0 +1,23 @@
+[Unit]
+Description=War Oracle Discord Bot (Clash of Clans war alerts + channel tools)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+# @BOTS_USER@ and @BOTS_DIR@ are filled in by install.sh
+User=@BOTS_USER@
+WorkingDirectory=@BOTS_DIR@/War-Oracle-Bot
+EnvironmentFile=@BOTS_DIR@/War-Oracle-Bot/.env
+Environment=NODE_ENV=production
+ExecStart=/usr/bin/node src/index.js
+Restart=always
+RestartSec=5
+# Hardening: the bot only needs its own folder (data/war_snapshot.json) and outbound network
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=@BOTS_DIR@/War-Oracle-Bot/data
+
+[Install]
+WantedBy=multi-user.target
