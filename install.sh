@@ -45,9 +45,11 @@ deploy() {
 
   # Empty .env, created once, readable only by the service user. Fill it in by hand.
   if [ ! -f "$dir/.env" ]; then
-    sudo -u "$BOTS_USER" cp "$HERE/env.example" "$dir/.env"
+    # Copied as root (the service user may not be able to read this checkout's folder), then handed over.
+    cp "$HERE/env/$unit.env.example" "$dir/.env"
+    chown "$BOTS_USER":"$BOTS_USER" "$dir/.env"
     chmod 600 "$dir/.env"
-    echo "Created $dir/.env (edit it: keep only the variables for $repo)"
+    echo "Created $dir/.env from env/$unit.env.example (fill in the values by hand)"
   fi
 
   sed -e "s#@BOTS_USER@#$BOTS_USER#g" -e "s#@BOTS_DIR@#$BOTS_DIR#g" "$HERE/systemd/$unit.service" > "/etc/systemd/system/$unit.service"

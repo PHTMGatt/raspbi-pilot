@@ -25,7 +25,8 @@ It does not contain bot code. Each bot lives in its own repo and runs as its **o
   curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -
   sudo apt install -y nodejs git
   ```
-- Two Discord bot tokens, one per bot (from the Discord developer portal).
+- Two Discord bot tokens, one per bot (from the Discord developer portal). For **Legacy Bot**, open its app in the Developer Portal, go to **Bot**, and turn on the privileged **Message Content Intent**. Without it the bot cannot log in ("Used disallowed intents"). War Oracle needs no privileged intents.
+- **If the bots already run on another machine (the PC), stop them there first** (and disable any auto-start). Two copies logged in with the same token answer every command and send every alert twice. To keep the watched repos and the last war snapshot, copy the old `data/` folders over after the install (see "Move from the PC").
 - A Clash of Clans API key, **created for the Pi's public IP** (keys are IP-locked, so the PC's key will not work on the Pi).
 
 ## Install
@@ -40,7 +41,7 @@ The installer:
 
 1. Creates a locked-down service user `bots` (no login shell) with home `/opt/bots`.
 2. Clones both bots (branch `main`; override with `BRANCH=<name> sudo -E ./install.sh`) and runs `npm ci --omit=dev`.
-3. Creates an `.env` per bot from `env.example`, `chmod 600`, with **empty values**. It never asks for or stores tokens.
+3. Creates an `.env` per bot from its own template (`env/legacy-bot.env.example`, `env/war-oracle.env.example`), `chmod 600`, owned by the service user, with **empty values**. Each file already has its own active `DISCORD_TOKEN=` line. It never asks for or stores tokens.
 4. Installs and enables the two systemd units (hardened: no new privileges, read-only filesystem except the bot's own `data/` folder). It does not start them.
 
 Then:
@@ -54,7 +55,13 @@ journalctl -u legacy-bot -u war-oracle -f
 
 ### Variables (names only)
 
-`env.example` lists them; the bot READMEs explain each one.
+The two files in `env/` list them (names only); the bot READMEs explain each one. Notes:
+
+- Write plain `NAME=value` lines: no quotes, no `export`, no trailing `# comments` (systemd and dotenv parse them differently).
+- Each bot has its **own** `DISCORD_TOKEN` (two separate Discord apps).
+- Leave `DATA_DIR` unset. The units are read-only except `<bot dir>/data` (`ProtectSystem=strict`, `ReadWritePaths`). If you set it anyway, add that folder to `ReadWritePaths=` in the unit and run `sudo systemctl daemon-reload`.
+- War Oracle's `POLL_SECONDS` must be 30 or more.
+- A start with an unfilled `.env` fails and `Restart=always` retries every 5 seconds; `journalctl -u <service> -n 40` shows "DISCORD_TOKEN is not set". Fill the file, then `sudo systemctl restart <service>`.
 
 | Bot | Needs |
 | --- | --- |
@@ -73,9 +80,35 @@ sudo ./install.sh && sudo systemctl restart legacy-bot war-oracle   # update bot
 
 Services restart on crash and start on boot.
 
+### Move from the PC
+
+Stop the PC copies, then (on the Pi, as a user that can read the files) copy the old state **before the first start**:
+
+```bash
+sudo systemctl stop legacy-bot war-oracle
+# copy Discord-Legacy-Bot/data/store.json and War-Oracle-Bot/data/war_snapshot.json into the Pi's data folders
+sudo chown bots:bots /opt/bots/Discord-Legacy-Bot/data/* /opt/bots/War-Oracle-Bot/data/*
+sudo systemctl start legacy-bot war-oracle
+```
+
+Starting empty is fine too: every `/watch` is then redone and the last war snapshot is gone.
+
+### Back up and restore
+
+```bash
+sudo tar -czf ~/bot-data-$(date +%F).tgz -C /opt/bots Discord-Legacy-Bot/data War-Oracle-Bot/data   # no .env inside
+# restore: stop, inspect, extract as the service user, start
+sudo systemctl stop legacy-bot war-oracle
+tar -tzf ~/bot-data-DATE.tgz
+sudo -u bots tar -xzf ~/bot-data-DATE.tgz -C /opt/bots
+sudo systemctl start legacy-bot war-oracle
+```
+
+The `.env` files are not in the archive on purpose: keep the tokens in a password manager.
+
 ## GitHub push alerts need a way in
 
-Legacy Bot receives GitHub webhooks on port 3000 (`/github`). From a home network, use a tunnel (for example a Cloudflare Tunnel to `http://localhost:3000`) instead of opening router ports. Slash commands, Legacy mode and all of War Oracle only make outbound connections and need nothing opened.
+Legacy Bot receives GitHub webhooks on port 3000 (`/github`). From a home network, use a tunnel (for example a Cloudflare Tunnel to `http://localhost:3000`) instead of opening router ports. Publish **only** the `/github` path through the tunnel (an ingress rule such as `path: ^/github$`), so the status page and `/healthz` stay private; `/github` fails closed without `GITHUB_WEBHOOK_SECRET`. The bot listens on all interfaces, so keep port 3000 off the router. Slash commands, Legacy mode and all of War Oracle only make outbound connections and need nothing opened.
 
 ## Not here yet (plan)
 

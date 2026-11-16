@@ -17,6 +17,7 @@ NoNewPrivileges=true
 PrivateTmp=true
 ProtectSystem=strict
 ProtectHome=true
+# If you ever set DATA_DIR in the .env, add that folder here too (a space-separated list), or the bot cannot save.
 ReadWritePaths=@BOTS_DIR@/War-Oracle-Bot/data
 
 [Install]
