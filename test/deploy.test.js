@@ -28,17 +28,42 @@ test('install.sh deploys both units and passes a bash syntax check', () => {
   assert.equal(r.status, 0, r.stderr);
 });
 
-test('env.example lists names only (no values)', () => {
-  for (const line of read('env.example').split('\n')) {
-    const m = /^#?\s*([A-Z][A-Z0-9_]*)=(.*)$/.exec(line);
-    if (!m) continue;
-    const value = m[2].replace(/\(.*$/, '').trim();
-    if (['PORT', 'POLL_SECONDS', 'ALERT_MINUTES'].includes(m[1])) continue; // harmless defaults
-    assert.equal(value, '', `${m[1]} must be empty in env.example`);
+const envFiles = { 'legacy-bot': 'env/legacy-bot.env.example', 'war-oracle': 'env/war-oracle.env.example' };
+const needs = {
+  'legacy-bot': ['DISCORD_TOKEN', 'GITHUB_WEBHOOK_SECRET'],
+  'war-oracle': ['DISCORD_TOKEN', 'COC_TOKEN', 'CLAN_TAG', 'WAR_ALERTS_CHANNEL_ID'],
+};
+const foreign = { 'legacy-bot': ['COC_TOKEN', 'CLAN_TAG', 'WAR_ALERTS_CHANNEL_ID', 'POLL_SECONDS'], 'war-oracle': ['GITHUB_WEBHOOK_SECRET', 'OPENAI_API_KEY', 'PORT'] };
+const active = (file) => (read(file).match(/^[A-Z][A-Z0-9_]*=.*$/gm) || []).map((l) => [l, l.slice(0, l.indexOf('=')), l.slice(l.indexOf('=') + 1)]);
+
+test('env templates list names only (no values)', () => {
+  for (const file of Object.values(envFiles)) {
+    for (const m of active(file)) {
+      if (['PORT', 'POLL_SECONDS', 'ALERT_MINUTES'].includes(m[1])) continue; // harmless defaults
+      assert.equal(m[2].trim(), '', `${file}: ${m[1]} must be empty`);
+    }
   }
 });
 
-test('env.example covers every variable the bots need', () => {
-  const t = read('env.example');
-  for (const v of ['DISCORD_TOKEN', 'GITHUB_WEBHOOK_SECRET', 'COC_TOKEN', 'CLAN_TAG', 'WAR_ALERTS_CHANNEL_ID']) assert.ok(t.includes(v), v);
+test('each bot template has an ACTIVE line for every variable that bot needs, and none of the other bot', () => {
+  for (const [unit, file] of Object.entries(envFiles)) {
+    const names = active(file).map((m) => m[1]);
+    for (const v of needs[unit]) assert.ok(names.includes(v), `${file}: no active ${v}= line`);
+    assert.equal(names.filter((n) => n === 'DISCORD_TOKEN').length, 1, `${file}: exactly one DISCORD_TOKEN`);
+    for (const v of foreign[unit]) assert.ok(!names.includes(v), `${file}: ${v} belongs to the other bot`);
+    assert.ok(!names.includes('DATA_DIR'), `${file}: DATA_DIR must stay unset (read-only filesystem)`);
+  }
+});
+
+test('install.sh copies each unit its own template, and the units explain DATA_DIR', () => {
+  const sh = read('install.sh');
+  assert.ok(sh.includes('env/$unit.env.example'));
+  for (const unit of units) {
+    assert.ok(fs.existsSync(path.join(root, envFiles[unit])));
+    assert.ok(/DATA_DIR/.test(read(`systemd/${unit}.service`)), `${unit}: unit should mention DATA_DIR / ReadWritePaths`);
+  }
+});
+
+test('the Legacy template tells you about the Message Content intent', () => {
+  assert.match(read(envFiles['legacy-bot']), /Message Content Intent/);
 });
