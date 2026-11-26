@@ -17,6 +17,10 @@ It does not contain bot code. Each bot lives in its own repo and runs as its **o
 
 ---
 
+## Status
+
+Checked 2026-11-26 on Windows with Node 26. `npm test` passes (6/6). `install.sh` and the systemd units were **not** run on a Pi.
+
 ## What you need
 
 - A Raspberry Pi with Raspberry Pi OS (64-bit) and internet.
